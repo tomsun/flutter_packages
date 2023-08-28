@@ -659,6 +659,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       position = Duration.zero;
     }
     await _videoPlayerPlatform.seekTo(_textureId, position);
+    if (_isDisposedOrNotInitialized) {
+      return;
+    }
     _updatePosition(position);
   }
 
