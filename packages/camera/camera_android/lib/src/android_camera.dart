@@ -14,6 +14,8 @@ import 'package:stream_transform/stream_transform.dart';
 import 'type_conversion.dart';
 import 'utils.dart';
 
+String? lastCameraTextureId;
+
 const MethodChannel _channel =
     MethodChannel('plugins.flutter.io/camera_android');
 
@@ -507,6 +509,7 @@ class AndroidCamera extends CameraPlatform {
 
   @override
   Widget buildPreview(int cameraId) {
+    lastCameraTextureId = cameraId;
     return Texture(textureId: cameraId);
   }
 
