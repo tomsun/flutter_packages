@@ -136,6 +136,7 @@ class Camera
   private CameraCaptureSession captureSession;
   private ImageReader pictureImageReader;
   private ImageReader imageStreamReader;
+  private ImageReader mlImageReader;
   /** {@link CaptureRequest.Builder} for the camera preview */
   private CaptureRequest.Builder previewRequestBuilder;
 
@@ -312,6 +313,12 @@ class Camera
             resolutionFeature.getPreviewSize().getHeight(),
             imageFormat,
             1);
+    mlImageReader =
+        ImageReader.newInstance(
+            resolutionFeature.getPreviewSize().getWidth(),
+            resolutionFeature.getPreviewSize().getHeight(),
+            imageFormat,
+            1);
 
     // Open the camera.
     CameraManager cameraManager = CameraUtils.getCameraManager(activity);
@@ -407,6 +414,7 @@ class Camera
         resolutionFeature.getPreviewSize().getHeight());
     Surface flutterSurface = new Surface(surfaceTexture);
     previewRequestBuilder.addTarget(flutterSurface);
+    previewRequestBuilder.addTarget(mlSurface);
 
     List<Surface> remainingSurfaces = Arrays.asList(surfaces);
     if (templateType != CameraDevice.TEMPLATE_PREVIEW) {
@@ -526,6 +534,11 @@ class Camera
   }
 
   private void startCapture(boolean record, boolean stream) throws CameraAccessException {
+    // Call the extended method with useMLSurface set to true by default
+    startCapture(record, stream, true);
+  }
+
+  private void startCapture(boolean record, boolean stream, boolean useMLSurface) throws CameraAccessException {
     List<Surface> surfaces = new ArrayList<>();
     Runnable successCallback = null;
     if (record) {
@@ -534,6 +547,10 @@ class Camera
     }
     if (stream) {
       surfaces.add(imageStreamReader.getSurface());
+    }
+    if (useMLSurface) {
+      // Ensure mlImageReader is initialized and ready to be used
+      surfaces.add(mlImageReader.getSurface());
     }
 
     createCaptureSession(
@@ -767,6 +784,8 @@ class Camera
       result.error("videoRecordingFailed", e.getMessage(), null);
     }
   }
+
+  public void startVideoRecording();
 
   public void stopVideoRecording(@NonNull final Result result) {
     if (!recordingVideo) {
@@ -1191,7 +1210,6 @@ class Camera
   private void closeCaptureSession() {
     if (captureSession != null) {
       Log.i(TAG, "closeCaptureSession");
-
       captureSession.close();
       captureSession = null;
     }
@@ -1219,6 +1237,10 @@ class Camera
     if (imageStreamReader != null) {
       imageStreamReader.close();
       imageStreamReader = null;
+    }
+    if (mlImageReader != null) {
+      mlImageReader.close();
+      mlImageReader = null;
     }
     if (mediaRecorder != null) {
       mediaRecorder.reset();

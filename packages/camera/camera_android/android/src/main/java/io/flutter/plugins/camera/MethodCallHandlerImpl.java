@@ -117,6 +117,11 @@ final class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
           result.success(null);
           break;
         }
+      case "startMLCapture":
+        {
+          camera.startMLCapture(result);
+          break;
+        }
       case "startVideoRecording":
         {
           camera.startVideoRecording(
